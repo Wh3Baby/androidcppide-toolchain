@@ -1,0 +1,65 @@
+name: Build toolchain release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1)"
+        required: true
+        default: "v1"
+      upstream_tag:
+        description: "Upstream tag to build (e.g. v1.5.0_21.09.2025)"
+        required: true
+        default: "v1.5.0_21.09.2025"
+
+permissions:
+  contents: write
+
+jobs:
+  build_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tar gzip coreutils
+
+      - name: Fetch upstream toolchain repo
+        run: |
+          git clone --depth 1 --branch "${{ inputs.upstream_tag }}" https://github.com/bnsmb/clang19_toolchain_for_android.git upstream
+
+      - name: Build tar.gz
+        run: |
+          set -euxo pipefail
+          cd upstream/sysroot
+          ./create_tar_archive.sh "$GITHUB_WORKSPACE/dist" "androidcppide-toolchain"
+          ls -la "$GITHUB_WORKSPACE/dist"
+
+      - name: Normalize artifact name
+        run: |
+          set -euxo pipefail
+          cd dist
+          # upstream script creates clang19_toolchain*release*.tar.gz
+          SRC="$(ls -1 *.tar.gz | head -n 1)"
+          OUT="androidcppide-toolchain-arm64-v8a-${{ inputs.tag }}.tar.gz"
+          mv "$SRC" "$OUT"
+          sha256sum "$OUT" | tee "$OUT.sha256"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: Android C++ IDE toolchain ${{ inputs.tag }}
+          body: |
+            Upstream: `bnsmb/clang19_toolchain_for_android` tag `${{ inputs.upstream_tag }}`
+
+            Assets:
+            - `androidcppide-toolchain-arm64-v8a-${{ inputs.tag }}.tar.gz`
+            - `androidcppide-toolchain-arm64-v8a-${{ inputs.tag }}.tar.gz.sha256`
+          files: |
+            dist/androidcppide-toolchain-arm64-v8a-${{ inputs.tag }}.tar.gz
+            dist/androidcppide-toolchain-arm64-v8a-${{ inputs.tag }}.tar.gz.sha256
+
