@@ -29,7 +29,7 @@ jobs:
 
       - name: Fetch upstream toolchain repo
         run: |
-          git clone --depth 1 --branch "${{ inputs.upstream_tag }}" https://github.com/bnsmb/clang19_toolchain_for_android.git upstream
+          git clone --depth 1 --branch "${{ github.event.inputs.upstream_tag }}" https://github.com/bnsmb/clang19_toolchain_for_android.git upstream
 
       - name: Build tar.gz
         run: |
@@ -44,22 +44,22 @@ jobs:
           cd dist
           # upstream script creates clang19_toolchain*release*.tar.gz
           SRC="$(ls -1 *.tar.gz | head -n 1)"
-          OUT="androidcppide-toolchain-arm64-v8a-${{ inputs.tag }}.tar.gz"
+          OUT="androidcppide-toolchain-arm64-v8a-${{ github.event.inputs.tag }}.tar.gz"
           mv "$SRC" "$OUT"
           sha256sum "$OUT" | tee "$OUT.sha256"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag }}
-          name: Android C++ IDE toolchain ${{ inputs.tag }}
+          tag_name: ${{ github.event.inputs.tag }}
+          name: Android C++ IDE toolchain ${{ github.event.inputs.tag }}
           body: |
-            Upstream: `bnsmb/clang19_toolchain_for_android` tag `${{ inputs.upstream_tag }}`
+            Upstream: `bnsmb/clang19_toolchain_for_android` tag `${{ github.event.inputs.upstream_tag }}`
 
             Assets:
-            - `androidcppide-toolchain-arm64-v8a-${{ inputs.tag }}.tar.gz`
-            - `androidcppide-toolchain-arm64-v8a-${{ inputs.tag }}.tar.gz.sha256`
+            - `androidcppide-toolchain-arm64-v8a-${{ github.event.inputs.tag }}.tar.gz`
+            - `androidcppide-toolchain-arm64-v8a-${{ github.event.inputs.tag }}.tar.gz.sha256`
           files: |
-            dist/androidcppide-toolchain-arm64-v8a-${{ inputs.tag }}.tar.gz
-            dist/androidcppide-toolchain-arm64-v8a-${{ inputs.tag }}.tar.gz.sha256
+            dist/androidcppide-toolchain-arm64-v8a-${{ github.event.inputs.tag }}.tar.gz
+            dist/androidcppide-toolchain-arm64-v8a-${{ github.event.inputs.tag }}.tar.gz.sha256
 
