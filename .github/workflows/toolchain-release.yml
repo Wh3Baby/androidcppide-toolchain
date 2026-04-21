@@ -35,7 +35,9 @@ jobs:
         run: |
           set -euxo pipefail
           cd upstream/sysroot
-          ./create_tar_archive.sh "$GITHUB_WORKSPACE/dist" "androidcppide-toolchain"
+          ./create_tar_archive.sh
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          cp -v ../clang19_toolchain*release*.tar.gz "$GITHUB_WORKSPACE/dist/"
           ls -la "$GITHUB_WORKSPACE/dist"
 
       - name: Normalize artifact name
